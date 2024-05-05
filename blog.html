@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Blog</title>
+    <script src="https://cdn.jsdelivr.net/npm/showdown@1.9.1/dist/showdown.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9; /* Slightly off-white background for the entire page */
+        }
+        #blogPosts {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .post {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+            background-color: #ffffff; /* White background for each post */
+            margin-bottom: 40px; /* Space between posts */
+            width: 80%; /* Or a fixed width, e.g., 800px for wider screens */
+            max-width: 800px; /* Maximum width of the post */
+            padding: 20px; /* Padding inside each post */
+            text-align: justify; /* Justify text for a cleaner look */
+            border-radius: 5px; /* Slightly rounded corners for the post boxes */
+        }
+    </style>
+</head>
+<body>
+    <div id="blogPosts"></div> <!-- Container for all blog posts -->
+    <script>
+        const posts = [
+            'blog/posts/birveda.md',
+            // Add more post paths here
+        ];
+
+        function loadPosts() {
+            const container = document.getElementById('blogPosts');
+            const converter = new showdown.Converter();
+            
+            posts.forEach(postPath => {
+                fetch(postPath)
+                    .then(response => response.text())
+                    .then(text => {
+                        const html = converter.makeHtml(text);
+                        const postDiv = document.createElement('div');
+                        postDiv.classList.add('post');
+                        postDiv.innerHTML = html;
+                        container.appendChild(postDiv);
+                        MathJax.typesetPromise(); // Re-render MathJax equations
+                    }).catch(error => {
+                        console.error('Error loading the Markdown file:', error);
+                        const errorDiv = document.createElement('div');
+                        errorDiv.innerHTML = `<p>Error loading post at ${postPath}.</p>`;
+                        container.appendChild(errorDiv);
+                    });
+            });
+        }
+
+        window.onload = loadPosts;
+    </script>
+</body>
+</html>

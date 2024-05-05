@@ -1,0 +1,30 @@
+/* diagonal.css */
+body, html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Courier New', monospace;
+    background-color: white;
+}
+.container {
+    width: 60vw;
+    height: 60vh;
+    position: relative;
+    margin: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.container a {
+    position: absolute;
+    font-size: 4vw;
+    color: black;
+    text-decoration: none;
+}
+.container a:nth-child(1) { top: 0; left: 0; }
+.container a:nth-child(2) { top: 15vh; left: 15vw; }
+.container a:nth-child(3) { top: 30vh; left: 30vw; }
+.container a:nth-child(4) { top: 45vh; left: 45vw; }

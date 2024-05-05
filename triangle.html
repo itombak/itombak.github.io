@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trippy Tetrahedron Edges</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+            // ShaderMaterial for the Tetrahedron
+        const tetraMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0 },
+                resolution: { type: "v2", value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform float time;
+                uniform vec2 resolution;
+                varying vec2 vUv;
+                float random (in vec2 st) {
+                    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+                }
+                void main() {
+                    vec2 st = vUv * resolution / 800.0;
+                    float noise = random(st);
+                    float noise2 = random(st + 0.1); 
+                    float noise3 = random(st + 0.2);
+                    float color = step(0.3, fract(sin(time) + noise));
+                    float color2 = step(0.3, fract(sin(time) + noise2));
+                    float color3 = step(0.3, fract(sin(time) + noise3));
+                    gl_FragColor = vec4(vec3(0.6*color, 0.6*color2, 0.6*color3), 1.0);
+                }
+            `
+        });
+
+        // Tetrahedron Geometry and Mesh
+        const geometry = new THREE.TetrahedronGeometry(1);
+        const tetrahedron = new THREE.Mesh(geometry, tetraMaterial);
+        scene.add(tetrahedron);
+
+        // Edges for the tetrahedron with shader
+        const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 100,  }); // Black color for edges
+        const edgeGeometry = new THREE.EdgesGeometry(geometry); // Use the tetrahedron's geometry
+        const wireframe = new THREE.LineSegments(edgeGeometry, edgeMaterial);
+        tetrahedron.add(wireframe); // Add edges directly to the tetrahedron mesh
+
+        // Background Plane with Shader Material
+        const backgroundMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0 },
+                resolution: { type: "v2", value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform float time;
+                uniform vec2 resolution;
+                varying vec2 vUv;
+                float random (in vec2 st) {
+                    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+                }
+                void main() {
+                    vec2 st = vUv * resolution / 800.0;
+                    float noise = random(st);
+                    float noise2 = random(st + 0.1); 
+                    float noise3 = random(st + 0.2);
+                    float color = step(0.9, fract(sin(time) + noise));
+                    float color2 = step(0.9, fract(sin(time) + noise2));
+                    float color3 = step(0.9, fract(sin(time) + noise3));
+                    gl_FragColor = vec4(vec3(0.4*color, 0.4*color2, 0.4*color3), 1.0);
+                }
+            `
+        });
+        const backgroundPlane = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), backgroundMaterial);
+        backgroundPlane.position.z = -5;
+        scene.add(backgroundPlane);
+
+        // Tetrahedron Edges
+        const vertices = [
+            new THREE.Vector3(1, 1, 1),
+            new THREE.Vector3(-1, -1, 1),
+            new THREE.Vector3(-1, 1, -1),
+            new THREE.Vector3(1, -1, -1)
+        ];
+
+        const edges = [
+            [vertices[0], vertices[1]],
+            [vertices[1], vertices[2]],
+            [vertices[2], vertices[3]],
+            [vertices[3], vertices[0]],
+            [vertices[0], vertices[2]],
+            [vertices[1], vertices[3]]
+        ];
+
+        let edgeObjects = [];
+
+        edges.forEach((edge, index) => {
+            const material = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 5});
+            const geometry = new THREE.BufferGeometry().setFromPoints(edge);
+            const line = new THREE.Line(geometry, material);
+            scene.add(line);
+            edgeObjects.push({ line, geometry, material, frequency: 1, amplitude: 0.5});
+        });
+
+        camera.position.z = 3;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const currentTime = Date.now() * 0.001;
+            backgroundMaterial.uniforms.time.value = currentTime;
+
+            edgeObjects.forEach((edge, index) => {
+                edge.frequency = Math.sin(currentTime + index) * 4 + 5;
+                edge.amplitude = Math.abs(Math.sin(currentTime * 1.5 + index)) * 0.5;
+                edge.geometry.setFromPoints(waveFormEdge(edges[index], edge.frequency, edge.amplitude));
+                edge.material.color.setHSL((edge.frequency - 1) / 8, 1, 0.5);
+            });
+
+            scene.rotation.x += 0.005;
+            scene.rotation.y += 0.005;
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            backgroundMaterial.uniforms.resolution.value.set(window.innerWidth, window.innerHeight);
+        }
+
+        function waveFormEdge(edge, frequency, amplitude) {
+            let points = [];
+            const divisions = 100;
+            for (let j = 0; j <= divisions; j++) {
+                const t = j / divisions;
+                const interpVec = new THREE.Vector3().lerpVectors(edge[0], edge[1], t);
+                const x = t * 2 - 1;
+                const bump = Math.exp(-1/(1 - x*x));
+                const wave = amplitude * Math.sin(2 * Math.PI * frequency * t) * bump;
+                const normal = new THREE.Vector3().subVectors(edge[1], edge[0]).normalize();
+                const waveVec = new THREE.Vector3().crossVectors(normal, new THREE.Vector3(0, 0, 1)).multiplyScalar(wave);
+                points.push(interpVec.add(waveVec));
+            }
+            return points;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+/* about-link.css */
+.about-link {
+    font-family: 'Courier New', monospace; /* Initial typewriter-like font */
+    font-size: 2em;
+    color: black;
+    text-decoration: none;
+    transition: all 0.3s ease; /* Smooth transition for style changes */
+}

@@ -1,0 +1,33 @@
+/* styles.css */
+body, html {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: white;
+    color: black;
+    font-family: 'Courier New', monospace;
+}
+
+.text-container {
+    position: relative;
+    overflow: hidden;
+    width: 80%;
+    text-align: center;
+}
+
+#text {
+    font-size: 2em;
+    position: relative;
+    transition: color 0.5s ease;
+}
+
+.box {
+    position: absolute;
+    border-radius: 1px; /* Adds curvature to simulate a lens effect */
+    backdrop-filter: blur(1px); /* Subtle blur to enhance the lens effect */
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0.2), inset 0 0 1px rgba(0, 0, 0, 0.2); /* Soft shadow for depth */
+    transition: opacity 0.5s ease-out; /* Smooth disappearance */
+    pointer-events: none;
+}
