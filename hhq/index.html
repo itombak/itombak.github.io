@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questionnaire</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        h1, h2, p {
+            margin: 0 0 20px;
+        }
+
+        button, input[type="radio"] {
+            background-color: white;
+            color: black;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover, input[type="radio"]:hover {
+            background-color: grey;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="languageContainer">
+        <!-- <h1>Wählen Sie Ihre Sprache</h1>
+        <h1>  Choose Your Language </h1> -->
+        <form id="languageForm">
+            <button type="button" data-lang="german">Deutsch</button>
+            <button type="button" data-lang="english">English</button>
+        </form>
+    </div>
+
+    <div id="questionContainer" class="hidden">
+        <h2 id="questionText"></h2>
+        <form id="answerForm">
+            <button type="button" id="yesButton" data-answer="yes">Yes</button>
+            <button type="button" id="noButton" data-answer="no">No</button>
+        </form>
+    </div>
+
+    <div id="endContainer" class="hidden">
+        <h1 id="endMessage"></h1>
+    </div>
+
+    <script src="questions.js"></script>
+    <script>
+        const num_questions = 10;
+        let selectedQuestions = [];
+        let currentQuestionIndex = 0;
+        let language = 'english';
+        let scores = { entropy: 0, society: 0, will: 0, logic: 0 };
+
+        document.querySelectorAll('#languageForm button').forEach(button => {
+            button.addEventListener('click', function() {
+                language = this.getAttribute('data-lang');
+                selectedQuestions = getRandomQuestions(num_questions);
+                document.getElementById('languageContainer').classList.add('hidden');
+                setLanguageSpecifics();
+                showQuestion();
+            });
+        });
+
+        document.querySelectorAll('#answerForm button').forEach(button => {
+            button.addEventListener('click', function() {
+                const answer = this.getAttribute('data-answer');
+                updateScores(answer);
+                currentQuestionIndex++;
+                if (currentQuestionIndex < selectedQuestions.length) {
+                    showQuestion();
+                } else {
+                    showEndPage();
+                }
+            });
+        });
+
+        function getRandomQuestions(num) {
+            const shuffled = questions.sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, num);
+        }
+
+        function setLanguageSpecifics() {
+            if (language === 'german') {
+                document.getElementById('yesButton').textContent = 'Ja';
+                document.getElementById('noButton').textContent = 'Nein';
+            } else {
+                document.getElementById('yesButton').textContent = 'Yes';
+                document.getElementById('noButton').textContent = 'No';
+            }
+        }
+
+        function showQuestion() {
+            const question = selectedQuestions[currentQuestionIndex];
+            document.getElementById('questionText').textContent = question[language];
+            document.getElementById('questionContainer').classList.remove('hidden');
+        }
+
+        function updateScores(answer) {
+            const question = selectedQuestions[currentQuestionIndex];
+            console.log(question);
+            console.log(answer);
+            const multiplier = answer === 'yes' ? 1 : -1;
+            console.log(multiplier);
+            scores.entropy += question.entropy * multiplier;
+            scores.society += question.society * multiplier;
+            scores.will += question.will * multiplier;
+            scores.logic += question.logic * multiplier;
+            console.log(scores);
+        }
+
+        function showEndPage() {
+            document.getElementById('questionContainer').classList.add('hidden');
+            document.getElementById('endContainer').classList.remove('hidden');
+            const endMessage = language === 'german' ? 'Vielen Dank für Ihre Teilnahme!' : 'Thank you for participating!';
+            document.getElementById('endMessage').textContent = endMessage;
+
+            // Prepare the data to be sent
+            const data = {
+                language: language,
+                entropy: scores.entropy,
+                society: scores.society,
+                will: scores.will,
+                logic: scores.logic
+            };
+
+            // Send the data to Google Sheets
+            fetch("https://script.google.com/macros/s/AKfycbzkp5Nc-QtodbcwvnfHfzn1SAQYzGg4TTulh2Hyhd9_Qr9kHrEaqw_Wn8tQBr0-zYVIXQ/exec", {
+                method: "POST",
+                body: JSON.stringify(data)
+            })
+            .then(response => response.text())
+            .then(text => console.log(text))
+            .catch(error => console.error("Error:", error));
+        }
+    </script>
+</body>
+</html>
