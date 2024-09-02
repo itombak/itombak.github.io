@@ -3,12 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Questionnaire</title>
+    <title>HyperHuman</title>
     <style>
+        @font-face {
+            font-family: 'AlteHaasGrotesk';
+            src: url('Alte-Haas-Grotesk.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'OPTIAthenaeum';
+            src: url('OPTIAthenaeum-Regular.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        /* Style for the Novalis quote with Athenaeum font */
+        .quote {
+            font-family: 'OPTIAthenaeum', serif;
+            font-size: 1.5rem;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            margin-left: 30px;  /* Increased margin for better visibility */
+            margin-right: 30px;
+        }
+
+        /* Style for the Novalis quote with Athenaeum font */
+        .author {
+            font-family: 'OPTIAthenaeum', serif;
+            font-size: 1.5rem;
+            line-height: 1.2;
+            margin-bottom: 40px;
+            margin-left: 30px;  /* Increased margin for better visibility */
+            margin-right: 30px;
+        }
+
+        .paragraph {
+            font-family: 'AlteHaasGrotesk', sans-serif;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-top: 20px;
+            margin-bottom: 40px;
+            margin-left: 30px;  /* Increased margin for better visibility */
+            margin-right: 30px;
+            text-align: justify;
+        }
+
+        /* Style for the Novalis quote with Athenaeum font */
+        .title {
+            font-family: 'AlteHaasGrotesk', sans-serif;
+            font-size: 1.8rem;
+            line-height: 1.2;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            margin-left: 30px;  /* Increased margin for better visibility */
+            margin-right: 30px;
+        }
+
         body {
             background-color: black;
             color: white;
-            font-family: 'Arial', sans-serif;
+            font-family: 'AlteHaasGrotesk', sans-serif;
             margin: 0;
             display: flex;
             flex-direction: column;
@@ -47,8 +101,8 @@
         <!-- <h1>Wählen Sie Ihre Sprache</h1>
         <h1>  Choose Your Language </h1> -->
         <form id="languageForm">
-            <button type="button" data-lang="german">Deutsch</button>
             <button type="button" data-lang="english">English</button>
+            <button type="button" data-lang="german">Deutsch</button>
         </form>
     </div>
 
@@ -66,7 +120,37 @@
 
     <script src="questions.js"></script>
     <script>
-        const num_questions = 10;
+
+    function playBeep() {
+        // Create an AudioContext
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Create an oscillator node (the sound source)
+        const oscillator = audioContext.createOscillator();
+        
+        // Set the oscillator frequency (in Hertz) for the beep sound
+        oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // 440 Hz is the standard A4 pitch
+        
+        // Create a gain node to control the volume
+        const gainNode = audioContext.createGain();
+        
+        // Connect the oscillator to the gain node
+        oscillator.connect(gainNode);
+        
+        // Connect the gain node to the audio context destination (speakers)
+        gainNode.connect(audioContext.destination);
+        
+        // Set the volume to a low level
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime); // Volume level (0 to 1)
+        
+        // Start the oscillator
+        oscillator.start();
+        
+        // Stop the oscillator after a short duration (e.g., 0.2 seconds)
+        oscillator.stop(audioContext.currentTime + 0.2);
+    }
+
+        const num_questions = 6;
         let selectedQuestions = [];
         let currentQuestionIndex = 0;
         let language = 'english';
@@ -117,23 +201,42 @@
         }
 
         function updateScores(answer) {
+
+            playBeep();
+
             const question = selectedQuestions[currentQuestionIndex];
             console.log(question);
-            console.log(answer);
+            // console.log(answer);
             const multiplier = answer === 'yes' ? 1 : -1;
-            console.log(multiplier);
+            // console.log(multiplier);
             scores.entropy += question.entropy * multiplier;
             scores.society += question.society * multiplier;
             scores.will += question.will * multiplier;
             scores.logic += question.logic * multiplier;
-            console.log(scores);
+            // console.log(scores);
         }
 
         function showEndPage() {
             document.getElementById('questionContainer').classList.add('hidden');
             document.getElementById('endContainer').classList.remove('hidden');
-            const endMessage = language === 'german' ? 'Vielen Dank für Ihre Teilnahme!' : 'Thank you for participating!';
+
+            const endMessage = language === 'german' ? 'HyperMensch' : 'HyperHuman';
             document.getElementById('endMessage').textContent = endMessage;
+
+            const quote = language === 'german' 
+                ? `Das Individuum verliert sich im sozialen Ganzen und wird Teil der „das Man“.`
+                : `The individual loses himself in the social whole and becomes part of "the man".`;
+
+            const mainEndMessage = language === 'german' 
+                ? 'Schau dir den Hypermenschen jetzt an—ein Individuum, das in einem gewaltigen Haufen von Daten verschlungen wird. Während deine Antworten in die riesige Simulation einfließen, erkenne die flüchtige Welle, die du erzeugst. Jeder Input stört den Haufen nur kurzzeitig, hinterlässt jedoch keinen bleibenden Eindruck und löst sich in der Gleichförmigkeit des Kollektivs auf. Das System verschlingt alles und löscht individuelle Identitäten aus. In diesem überwältigenden digitalen Raum gehen deine Daten nicht verloren—sie werden irrelevant gemacht.' 
+                : 'Look at the hyperhuman now—an individual engulfed in a vast heap of data. As your answers blend into the massive simulation, recognize the brief ripple you create. Each input momentarily disturbs the heap, yet leaves no lasting mark, dissolving into the sameness of the collective. The system devours everything, erasing individual identities. In this overwhelming digital space, your data isn’t lost—it’s made irrelevant.';
+
+            document.getElementById('endMessage').innerHTML = `
+                <div class="quote">${quote}</div>
+                <div class="author">Martin Heidegger</div>
+                <div class="paragraph">${mainEndMessage}</div>
+                <div class="title">${endMessage}</div>
+            `;
 
             // Prepare the data to be sent
             const data = {
